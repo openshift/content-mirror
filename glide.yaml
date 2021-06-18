@@ -1,5 +1,0 @@
-package: github.com/openshift/content-mirror
-import:
-- package: github.com/fsnotify/fsnotify
-- package: github.com/go-ini/ini
-- package: github.com/spf13/cobra

@@ -1,9 +1,10 @@
-FROM openshift/origin-release:golang-1.9
-COPY . /go/src/github.com/openshift/content-mirror/
-RUN GOPATH=/go go install github.com/openshift/content-mirror/cmd/content-mirror
+FROM registry.ci.openshift.org/openshift/release:golang-1.16
+WORKDIR /go/src/github.com/openshift/content-mirror
+COPY . .
+RUN make build
 
 FROM centos:7
-COPY --from=0 /go/bin/content-mirror /usr/bin/content-mirror
+COPY --from=0 /go/src/github.com/openshift/content-mirror/content-mirror /usr/bin/content-mirror
 COPY nginx.repo /etc/yum.repos.d/nginx.repo
 RUN INSTALL_PKGS=" \
       nginx \
