@@ -1,5 +1,5 @@
 build:
-	go build ./cmd/content-mirror
+	go build -mod vendor ./cmd/content-mirror
 .PHONY: build
 
 build-image:
@@ -7,5 +7,5 @@ build-image:
 .PHONY: build-image
 
 update-deps:
-	glide update -v --skip-test
+	GO111MODULE=on go mod vendor
 .PHONY: update-deps
