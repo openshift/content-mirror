@@ -8,8 +8,9 @@ type CacheConfig struct {
 
 	LogLevel string
 
-	Frontends []Frontend
-	Upstreams []Upstream
+	Frontends   []Frontend
+	Upstreams   []Upstream
+	RepoProxies []RepoProxy
 }
 
 type Frontend struct {
@@ -20,13 +21,19 @@ type Frontend struct {
 
 type Upstream struct {
 	Name  string
-	URL   string
 	Hosts []string
 
 	Repo bool
+}
+
+type RepoProxy struct {
+	RepoID   string
+	URL      string
+	Upstream string
 
 	TLS               bool
 	CACertificatePath string
 	CertificatePath   string
 	KeyPath           string
+	AuthHeader        string
 }

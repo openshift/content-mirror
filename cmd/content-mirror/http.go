@@ -22,12 +22,8 @@ const templateHTMLIndex = `
     <body>
       <h1>Available content</h1>
     <ul>
-      {{- range .Upstreams }}
-      {{- if .Repo }}
-      <li><a href="/{{ .Name }}">{{ .Name }}</a> (<a href="/{{ .Name }}.repo">RPM repo</a>)
-      {{- else }}
-      <li><a href="/{{ .Name }}">{{ .Name }}</a>
-      {{- end }}
+      {{- range .RepoProxies }}
+      <li><a href="/{{ .RepoID }}">{{ .RepoID }}</a> (<a href="/{{ .RepoID }}.repo">RPM repo</a>)
       {{- end }}
     </ul>
   </body>
@@ -35,9 +31,9 @@ const templateHTMLIndex = `
 `
 
 const templateUpstreamRepository = `
-[{{ .Name }}]
-id = {{ .Name }}
-name = {{ .Name }}
+[{{ .RepoID }}]
+id = {{ .RepoID }}
+name = {{ .RepoID }}
 baseurl = {{ .URL }}
 enabled = 1
 gpgcheck = 0
@@ -67,19 +63,15 @@ func NewHandlers(config ConfigAccessor) (http.Handler, error) {
 		lastConfig := config.LastConfig()
 		if strings.Count(req.URL.Path, "/") == 1 && strings.HasSuffix(req.URL.Path, ".repo") {
 			name := strings.TrimSuffix(req.URL.Path[1:], ".repo")
-			for _, upstream := range lastConfig.Upstreams {
-				if upstream.Name != name {
+			for _, repo := range lastConfig.RepoProxies {
+				if repo.RepoID != name {
 					continue
-				}
-				// not a candidate for being an RPM repository
-				if !upstream.Repo {
-					break
 				}
 
 				// output an RPM repository file dynamically
-				upstream.URL = urlForRepo(req, &upstream)
+				repo.URL = urlForRepo(req, &repo)
 
-				if err := upstreamRepo.Execute(w, &upstream); err != nil {
+				if err := upstreamRepo.Execute(w, &repo); err != nil {
 					log.Printf("error: Unable to write repository template %v", err)
 				}
 				return
@@ -97,12 +89,9 @@ func NewHandlers(config ConfigAccessor) (http.Handler, error) {
 			}
 			return
 		}
-		for _, upstream := range lastConfig.Upstreams {
-			if !upstream.Repo {
-				continue
-			}
-			upstream.URL = urlForRepo(req, &upstream)
-			if err := upstreamRepo.Execute(w, &upstream); err != nil {
+		for _, repo := range lastConfig.RepoProxies {
+			repo.URL = urlForRepo(req, &repo)
+			if err := upstreamRepo.Execute(w, &repo); err != nil {
 				log.Printf("error: Unable to write index template %v", err)
 				break
 			}
@@ -111,7 +100,7 @@ func NewHandlers(config ConfigAccessor) (http.Handler, error) {
 	return mux, nil
 }
 
-func urlForRepo(req *http.Request, upstream *config.Upstream) string {
+func urlForRepo(req *http.Request, repo *config.RepoProxy) string {
 	url := *req.URL
 	switch proto := req.Header.Get("X-Forwarded-Proto"); proto {
 	case "https", "http":
@@ -124,7 +113,7 @@ func urlForRepo(req *http.Request, upstream *config.Upstream) string {
 		}
 	}
 	url.Host = req.Host
-	url.Path = fmt.Sprintf("/%s", upstream.Name)
+	url.Path = fmt.Sprintf("/%s", repo.RepoID)
 	return url.String()
 }
 
