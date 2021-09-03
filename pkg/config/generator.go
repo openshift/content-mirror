@@ -32,6 +32,9 @@ func NewGenerator(path string, template *template.Template, config *CacheConfig)
 func (m *Generator) Load(paths []string) error {
 	log.Printf("Configuration inputs changed")
 	var upstreams []Upstream
+	var repoProxies []RepoProxy
+	upstreamDefined := make(map[string]bool)
+
 	for _, p := range paths {
 		files, err := ioutil.ReadDir(p)
 		if err != nil {
@@ -48,17 +51,24 @@ func (m *Generator) Load(paths []string) error {
 				if len(name) == 0 {
 					continue
 				}
-				rpmUpstreams, err := LoadRPMRepoUpstreams(filePath)
+				rpmUpstreams, rpmRepoProxies, err := LoadRPMRepoUpstreams(filePath)
 				if err != nil {
 					return fmt.Errorf("%s: %v", filePath, err)
 				}
-				upstreams = append(upstreams, rpmUpstreams...)
+				repoProxies = append(repoProxies, rpmRepoProxies...)
+				for _, upstream := range rpmUpstreams {
+					if _, ok := upstreamDefined[upstream.Name]; !ok {  // Dedupe upstreams
+						upstreamDefined[upstream.Name] = true
+						upstreams = append(upstreams, upstream)
+					}
+				}
 			}
 		}
 	}
 
 	config := *m.config
 	config.Upstreams = upstreams
+	config.RepoProxies = repoProxies
 	buf := &bytes.Buffer{}
 	if err := m.template.Execute(buf, config); err != nil {
 		return err

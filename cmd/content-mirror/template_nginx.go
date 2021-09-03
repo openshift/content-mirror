@@ -30,6 +30,7 @@ http {
   }
 {{- end }}
 {{ $upstreams := .Upstreams }}
+{{ $repoProxies := .RepoProxies }}
 {{- range .Upstreams }}
   upstream {{ .Name }} {
     keepalive 10;
@@ -55,14 +56,20 @@ http {
     # it could be "close" to close a keepalive connection
     proxy_set_header Connection "";
 
-    {{ range $upstreams -}}
-    location /{{ .Name }}/ {
+    {{ range $repoProxies -}}
+    location /{{ .RepoID }}/ {
       proxy_pass {{ .URL }};
+
+      proxy_ssl_server_name on;
 
       # Enable caching and report the status as a header
       proxy_cache_valid 200 302 {{ $config.InactiveDuration }};
       add_header X-Proxy-CacheConfig   $upstream_cache_status;
-      proxy_set_header Host {{ index .Hosts 0 }};
+      proxy_set_header Host {{ .Upstream }};
+
+      {{- if .AuthHeader }}
+      proxy_set_header Authorization "{{ .AuthHeader }}";
+      {{- end }}
 
       {{- if .TLS }}
       proxy_ssl_session_reuse on;
@@ -84,7 +91,10 @@ http {
         
         proxy_cache_valid 200 206 60s; 
         
-        proxy_set_header Host {{ index .Hosts 0 }};
+        proxy_set_header Host {{ .Upstream }};
+        {{- if .AuthHeader }}
+        proxy_set_header Authorization "{{ .AuthHeader }}";
+	    {{- end }}
         
         {{- if .TLS }}
         proxy_ssl_session_reuse on;
@@ -101,11 +111,11 @@ http {
       }
 
     }
-    location = /{{ .Name }} {
-      rewrite ^ /{{ .Name }}/ redirect;
+    location = /{{ .RepoID }} {
+      rewrite ^ /{{ .RepoID }}/ redirect;
     }
     {{- if gt $config.LocalPort 0 }}
-    location /{{ .Name }} {
+    location /{{ .RepoID }} {
       proxy_pass http://localhost;
       proxy_set_header Host $http_host;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

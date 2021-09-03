@@ -92,7 +92,7 @@ func (opt *Options) Run() error {
 	generator := config.NewGenerator(opt.ConfigPath, t, cacheConfig)
 	r := NewReloadManager(generator, process)
 
-	// the watcher coalesceses frequent file changes
+	// the watcher coalesces frequent file changes
 	w := watcher.New(opt.Paths, r.Load)
 	w.SetMinimumInterval(10 * time.Millisecond)
 	w.SetMaxDelays(100)
