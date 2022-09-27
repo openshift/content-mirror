@@ -2,6 +2,7 @@ package config
 
 type CacheConfig struct {
 	LocalPort        int
+	BaseURL          string
 	CacheDir         string
 	MaxCacheSize     string
 	InactiveDuration string

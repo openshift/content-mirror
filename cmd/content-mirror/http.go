@@ -69,7 +69,7 @@ func NewHandlers(config ConfigAccessor) (http.Handler, error) {
 				}
 
 				// output an RPM repository file dynamically
-				repo.URL = urlForRepo(req, &repo)
+				repo.URL = urlForRepo(req, &repo, lastConfig.BaseURL)
 
 				if err := upstreamRepo.Execute(w, &repo); err != nil {
 					log.Printf("error: Unable to write repository template %v", err)
@@ -90,7 +90,7 @@ func NewHandlers(config ConfigAccessor) (http.Handler, error) {
 			return
 		}
 		for _, repo := range lastConfig.RepoProxies {
-			repo.URL = urlForRepo(req, &repo)
+			repo.URL = urlForRepo(req, &repo, "")
 			if err := upstreamRepo.Execute(w, &repo); err != nil {
 				log.Printf("error: Unable to write index template %v", err)
 				break
@@ -100,7 +100,10 @@ func NewHandlers(config ConfigAccessor) (http.Handler, error) {
 	return mux, nil
 }
 
-func urlForRepo(req *http.Request, repo *config.RepoProxy) string {
+func urlForRepo(req *http.Request, repo *config.RepoProxy, baseUrl string) string {
+	if baseUrl != "" {
+		return fmt.Sprintf("%s/%s", baseUrl, repo.RepoID)
+	}
 	url := *req.URL
 	switch proto := req.Header.Get("X-Forwarded-Proto"); proto {
 	case "https", "http":

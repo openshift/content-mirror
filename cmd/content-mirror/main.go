@@ -22,6 +22,7 @@ func main() {
 		MaxCacheSize: "1g",
 		CacheTimeout: "15m",
 		Listen:       "8080",
+		BaseURL:      "",
 
 		LocalPort: 9001,
 	}
@@ -39,6 +40,7 @@ func main() {
 
 	cmd.Flags().StringVar(&opt.ConfigPath, "path", opt.ConfigPath, "The path to write the configuration to.")
 	cmd.Flags().StringVar(&opt.CacheDir, "cache-dir", opt.CacheDir, "The directory to cache mirrored content into.")
+	cmd.Flags().StringVar(&opt.BaseURL, "base-url", opt.BaseURL, "The base URL to use for serving repo files. Defaults to the repo files definitions.")
 	cmd.Flags().StringVar(&opt.MaxCacheSize, "max-size", opt.MaxCacheSize, "The maximum size of the cache (e.g. 10g, 100m).")
 	cmd.Flags().StringVar(&opt.CacheTimeout, "timeout", opt.CacheTimeout, "How long an item is kept in the cache.")
 	cmd.Flags().StringVar(&opt.Listen, "listen", opt.Listen, "The address (host:port, host, or port) to bind to for serving content.")
@@ -53,6 +55,7 @@ func main() {
 type Options struct {
 	Paths      []string
 	ConfigPath string
+	BaseURL    string
 
 	CacheDir     string
 	MaxCacheSize string
@@ -78,6 +81,7 @@ func (opt *Options) Run() error {
 	cacheConfig := &config.CacheConfig{
 		LogLevel:         level,
 		LocalPort:        opt.LocalPort,
+		BaseURL:          opt.BaseURL,
 		CacheDir:         opt.CacheDir,
 		MaxCacheSize:     opt.MaxCacheSize,
 		InactiveDuration: opt.CacheTimeout,
