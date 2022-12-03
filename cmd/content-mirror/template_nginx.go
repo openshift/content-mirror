@@ -56,13 +56,9 @@ http {
     # it could be "close" to close a keepalive connection
     proxy_set_header Connection "";
 
-    {{ range $i, $rp := $repoProxies -}}
-
-
-	set $repo{{ $i }}_backend {{ .URL }}; 
-
+    {{ range $repoProxies -}}
     location /{{ .RepoID }}/ {
-      proxy_pass $repo{{ $i }}_backend;
+      proxy_pass {{ .URL }};
 
       proxy_ssl_server_name on;
 
@@ -91,7 +87,7 @@ http {
       # mirrored server regularly. When a yum repository is rebuilt, references in an old
       # copy of repomd.xml will no longer resolve - resulting in 404s.
       location ~ ^.*/(repodata/repomd\.xml) {
-        proxy_pass $repo{{ $i }}_backend$1;
+        proxy_pass {{ .URL }}$1;
         
         proxy_cache_valid 200 206 60s; 
         
@@ -115,11 +111,9 @@ http {
       }
 
     }
-
     location = /{{ .RepoID }} {
       rewrite ^ /{{ .RepoID }}/ redirect;
     }
-
     {{- if gt $config.LocalPort 0 }}
     location /{{ .RepoID }} {
       proxy_pass http://localhost;
@@ -127,9 +121,7 @@ http {
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
       proxy_set_header X-Forwarded-Proto $scheme;
     }
-
     {{- end }}
-
     {{- end }}
 
     {{- if gt $config.LocalPort 0 }}
