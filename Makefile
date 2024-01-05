@@ -3,7 +3,7 @@ build:
 .PHONY: build
 
 build-image:
-	docker build .
+	podman build .
 .PHONY: build-image
 
 update-deps:
