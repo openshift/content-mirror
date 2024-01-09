@@ -88,9 +88,9 @@ func (opt *Options) Run() error {
 		},
 	}
 
-	process := process.New(opt.ConfigPath)
+	processor := process.New(opt.ConfigPath)
 	generator := config.NewGenerator(opt.ConfigPath, t, cacheConfig)
-	r := NewReloadManager(generator, process)
+	r := NewReloadManager(generator, processor)
 
 	// the watcher coalesces frequent file changes
 	w := watcher.New(opt.Paths, r.Load)
@@ -112,7 +112,7 @@ func (opt *Options) Run() error {
 
 	// only launch the process if we are generating a config file
 	if len(opt.ConfigPath) > 0 {
-		process.Run()
+		processor.Run()
 	}
 
 	return w.Run()
