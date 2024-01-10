@@ -1,5 +1,7 @@
 [nginx]
 name=nginx
-gpgcheck=0
-enabled=0
-baseurl=http://nginx.org/packages/mainline/centos/7/x86_64/
+gpgcheck=1
+enabled=1
+gpgkey=https://nginx.org/keys/nginx_signing.key
+baseurl=http://nginx.org/packages/mainline/centos/$releasever/$basearch/
+module_hotfixes=true
