@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/fsnotify/fsnotify"
+	"k8s.io/klog"
+	"k8s.io/test-infra/prow/interrupts"
 	"log"
 	"net/http"
 	"os"
@@ -66,6 +69,13 @@ type Options struct {
 // Run launches the configuration generator, the nginx process, and
 // an HTTP server for dynamic content.
 func (opt *Options) Run() error {
+	// prow registers this on init
+	interrupts.OnInterrupt(func() { os.Exit(0) })
+
+	if err := setupKubeconfigWatches(opt); err != nil {
+		klog.Warningf("Failed to set up repo watches: %v", err)
+	}
+
 	t, err := template.New("config").Parse(nginxConfigTemplate)
 	if err != nil {
 		return err
@@ -148,5 +158,33 @@ func (m *reloadManager) Load(paths []string) error {
 		return err
 	}
 	m.reloader.Reload()
+	return nil
+}
+
+func setupKubeconfigWatches(opt *Options) error {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return fmt.Errorf("failed to set up watcher: %w", err)
+	}
+	for _, candidate := range opt.Paths {
+		if _, err := os.Stat(candidate); err != nil {
+			continue
+		}
+		if err := watcher.Add(candidate); err != nil {
+			return fmt.Errorf("failed to watch %s: %w", candidate, err)
+		}
+	}
+
+	go func() {
+		for e := range watcher.Events {
+			if e.Op == fsnotify.Chmod {
+				// For some reason we get frequent chmod events from Openshift
+				continue
+			}
+			klog.Infof("event: %s, Underlying repo changed. Exiting the pod, so that a new one can pick up the changes.", e.String())
+			interrupts.Terminate()
+		}
+	}()
+
 	return nil
 }

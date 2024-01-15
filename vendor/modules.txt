@@ -4,9 +4,16 @@ github.com/fsnotify/fsnotify
 # github.com/go-ini/ini v1.67.0
 ## explicit
 github.com/go-ini/ini
+# github.com/go-logr/logr v1.2.4
+## explicit; go 1.16
+# github.com/golang/glog v1.2.0
+## explicit; go 1.19
 # github.com/inconshreveable/mousetrap v1.1.0
 ## explicit; go 1.18
 github.com/inconshreveable/mousetrap
+# github.com/sirupsen/logrus v1.9.0
+## explicit; go 1.13
+github.com/sirupsen/logrus
 # github.com/spf13/cobra v1.8.0
 ## explicit; go 1.15
 github.com/spf13/cobra
@@ -15,8 +22,14 @@ github.com/spf13/cobra
 github.com/spf13/pflag
 # github.com/stretchr/testify v1.8.4
 ## explicit; go 1.20
-# golang.org/x/sys v0.4.0
+# golang.org/x/sys v0.8.0
 ## explicit; go 1.17
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
+# k8s.io/klog v1.0.0
+## explicit; go 1.12
+k8s.io/klog
+# k8s.io/test-infra v0.0.0-20240115200948-9aef1f17dc6e
+## explicit; go 1.21
+k8s.io/test-infra/prow/interrupts
