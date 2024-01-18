@@ -57,6 +57,19 @@ func NewHandlers(config ConfigAccessor) (http.Handler, error) {
 
 	mux := http.NewServeMux()
 	mux.Handle("/healthz", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		lastConfig := config.LastConfig()
+
+		for _, repoProxy := range lastConfig.RepoProxies {
+			url := repoProxy.URL
+
+			_, err := http.Get(url)
+			if err != nil {
+				// URL is not valid or there was an error accessing it
+				fmt.Fprintln(w, "not ok")
+				return
+			}
+		}
+
 		fmt.Fprintln(w, "ok")
 	}))
 	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
