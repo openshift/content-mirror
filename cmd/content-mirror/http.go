@@ -65,11 +65,13 @@ func NewHandlers(config ConfigAccessor) (http.Handler, error) {
 			_, err := http.Get(url)
 			if err != nil {
 				// URL is not valid or there was an error accessing it
+				w.WriteHeader(http.StatusInternalServerError)
 				fmt.Fprintln(w, "not ok")
 				return
 			}
 		}
 
+		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "ok")
 	}))
 	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
