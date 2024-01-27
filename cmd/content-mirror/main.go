@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"text/template"
 	"time"
 
@@ -81,6 +82,7 @@ func (opt *Options) Run() error {
 		CacheDir:         opt.CacheDir,
 		MaxCacheSize:     opt.MaxCacheSize,
 		InactiveDuration: opt.CacheTimeout,
+		RepoProxyMaps:    make(map[string]bool),
 		Frontends: []config.Frontend{
 			{
 				Listen: opt.Listen,
@@ -91,6 +93,43 @@ func (opt *Options) Run() error {
 	processor := process.New(opt.ConfigPath)
 	generator := config.NewGenerator(opt.ConfigPath, t, cacheConfig)
 	r := NewReloadManager(generator, processor)
+
+	// Keep track of URLs that can be reached, in RepoProxyMaps
+	go func() {
+		for {
+			lastConfig := generator.LastConfig()
+
+			if lastConfig != nil {
+				for _, repoProxy := range lastConfig.RepoProxies {
+					url := repoProxy.URL
+
+					response, responseErr := http.Get(url)
+					if responseErr == nil && response.StatusCode == http.StatusOK {
+						// We can reach the endpoint
+						lastConfig.RepoProxyMaps[url] = true
+					} else {
+						_, exists := lastConfig.RepoProxyMaps[url]
+
+						if exists {
+							// If the url exists in the map, it means that we had connected that endpoint before
+							// Since now we can't reach it, it means that the IP address changed, lets restart nginx
+							command := "pkill"
+							arg := "nginx"
+
+							cmd := exec.Command(command, arg)
+							_, err := cmd.Output()
+							if err != nil {
+								log.Printf("Error restarting nginx")
+							}
+						}
+					}
+				}
+			}
+
+			// Repeat this process every 5 minutes
+			time.Sleep(5 * time.Minute)
+		}
+	}()
 
 	// the watcher coalesces frequent file changes
 	w := watcher.New(opt.Paths, r.Load)

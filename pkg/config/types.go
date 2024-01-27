@@ -8,9 +8,10 @@ type CacheConfig struct {
 
 	LogLevel string
 
-	Frontends   []Frontend
-	Upstreams   []Upstream
-	RepoProxies []RepoProxy
+	Frontends     []Frontend
+	Upstreams     []Upstream
+	RepoProxies   []RepoProxy
+	RepoProxyMaps map[string]bool
 }
 
 type Frontend struct {

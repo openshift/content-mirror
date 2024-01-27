@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	htmltemplate "html/template"
-	"io"
 	"log"
 	"mime"
 	"net/http"
@@ -58,23 +57,6 @@ func NewHandlers(config ConfigAccessor) (http.Handler, error) {
 
 	mux := http.NewServeMux()
 	mux.Handle("/healthz", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		lastConfig := config.LastConfig()
-
-		for _, repoProxy := range lastConfig.RepoProxies {
-			url := repoProxy.URL + "/repodata/repomd.xml"
-
-			response, responseErr := http.Get(url)
-
-			body, readError := io.ReadAll(response.Body)
-
-			if responseErr != nil || readError != nil || len(body) == 0 {
-				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprintln(w, "not ok")
-				return
-			}
-		}
-
-		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "ok")
 	}))
 	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
