@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
@@ -103,7 +104,23 @@ func (opt *Options) Run() error {
 				for _, repoProxy := range lastConfig.RepoProxies {
 					url := repoProxy.URL
 
-					response, responseErr := http.Get(url)
+					client := &http.Client{}
+
+					if len(repoProxy.CertificatePath) > 0 && len(repoProxy.KeyPath) > 0 {
+						client = HttpTLSClient(repoProxy)
+					}
+
+					req, err := http.NewRequest("GET", url, nil)
+					if err != nil {
+						log.Println("Unable to make GET request", err)
+						continue
+					}
+
+					if len(repoProxy.AuthHeader) > 0 {
+						req.Header.Add("Authorization", repoProxy.AuthHeader)
+					}
+
+					response, responseErr := client.Do(req)
 					if responseErr == nil && response.StatusCode == http.StatusOK {
 						// We can reach the endpoint
 						lastConfig.RepoProxyMaps[url] = true
@@ -121,6 +138,7 @@ func (opt *Options) Run() error {
 							if err != nil {
 								log.Printf("Error restarting nginx")
 							}
+							break
 						}
 					}
 				}
@@ -188,4 +206,22 @@ func (m *reloadManager) Load(paths []string) error {
 	}
 	m.reloader.Reload()
 	return nil
+}
+
+func HttpTLSClient(repo config.RepoProxy) (client *http.Client) {
+	x509cert, err := tls.LoadX509KeyPair(repo.CertificatePath, repo.KeyPath)
+	if err != nil {
+		panic(err.Error())
+	}
+	certs := []tls.Certificate{x509cert}
+	if len(certs) == 0 {
+		client = &http.Client{}
+		return
+	}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{Certificates: certs,
+			InsecureSkipVerify: true},
+	}
+	client = &http.Client{Transport: tr}
+	return
 }
