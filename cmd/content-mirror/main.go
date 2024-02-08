@@ -1,10 +1,12 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"text/template"
 	"time"
 
@@ -81,6 +83,7 @@ func (opt *Options) Run() error {
 		CacheDir:         opt.CacheDir,
 		MaxCacheSize:     opt.MaxCacheSize,
 		InactiveDuration: opt.CacheTimeout,
+		RepoProxyMaps:    make(map[string]bool),
 		Frontends: []config.Frontend{
 			{
 				Listen: opt.Listen,
@@ -91,6 +94,60 @@ func (opt *Options) Run() error {
 	processor := process.New(opt.ConfigPath)
 	generator := config.NewGenerator(opt.ConfigPath, t, cacheConfig)
 	r := NewReloadManager(generator, processor)
+
+	// Keep track of URLs that can be reached, in RepoProxyMaps
+	go func() {
+		for {
+			lastConfig := generator.LastConfig()
+
+			if lastConfig != nil {
+				for _, repoProxy := range lastConfig.RepoProxies {
+					url := repoProxy.URL
+
+					client := &http.Client{}
+
+					if len(repoProxy.CertificatePath) > 0 && len(repoProxy.KeyPath) > 0 {
+						client = HttpTLSClient(repoProxy)
+					}
+
+					req, err := http.NewRequest("GET", url, nil)
+					if err != nil {
+						log.Println("Unable to make GET request", err)
+						continue
+					}
+
+					if len(repoProxy.AuthHeader) > 0 {
+						req.Header.Add("Authorization", repoProxy.AuthHeader)
+					}
+
+					response, responseErr := client.Do(req)
+					if responseErr == nil && response.StatusCode == http.StatusOK {
+						// We can reach the endpoint
+						lastConfig.RepoProxyMaps[url] = true
+					} else {
+						_, exists := lastConfig.RepoProxyMaps[url]
+
+						if exists {
+							// If the url exists in the map, it means that we had connected that endpoint before
+							// Since now we can't reach it, it means that the IP address changed, lets restart nginx
+							command := "pkill"
+							arg := "nginx"
+
+							cmd := exec.Command(command, arg)
+							_, err := cmd.Output()
+							if err != nil {
+								log.Printf("Error restarting nginx")
+							}
+							break
+						}
+					}
+				}
+			}
+
+			// Repeat this process every 5 minutes
+			time.Sleep(5 * time.Minute)
+		}
+	}()
 
 	// the watcher coalesces frequent file changes
 	w := watcher.New(opt.Paths, r.Load)
@@ -149,4 +206,22 @@ func (m *reloadManager) Load(paths []string) error {
 	}
 	m.reloader.Reload()
 	return nil
+}
+
+func HttpTLSClient(repo config.RepoProxy) (client *http.Client) {
+	x509cert, err := tls.LoadX509KeyPair(repo.CertificatePath, repo.KeyPath)
+	if err != nil {
+		panic(err.Error())
+	}
+	certs := []tls.Certificate{x509cert}
+	if len(certs) == 0 {
+		client = &http.Client{}
+		return
+	}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{Certificates: certs,
+			InsecureSkipVerify: true},
+	}
+	client = &http.Client{Transport: tr}
+	return
 }
