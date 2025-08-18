@@ -16,6 +16,10 @@ build:
 	go build -mod=vendor ./cmd/content-mirror
 .PHONY: build
 
+clean:
+	rm -f content-mirror
+.PHONY: clean
+
 build-image:
 	$(CONTAINER_ENGINE) build -t content-mirror:latest .
 .PHONY: build-image
@@ -31,3 +35,7 @@ debug-image:
 remote-debug: debug-image
 	$(CONTAINER_ENGINE) run $(CONTAINER_ENGINE_OPTS) $(CONTAINER_USER) --rm -v "$(CONTENT_MIRROR_DATA)/key:/tmp/key$(VOLUME_MOUNT_FLAGS)" -v "$(CONTENT_MIRROR_DATA)/mirror-enterprise-basic-auth:/tmp/mirror-enterprise-basic-auth$(VOLUME_MOUNT_FLAGS)" -v "$(CONTENT_MIRROR_DATA)/repos:/tmp/repos$(VOLUME_MOUNT_FLAGS)" -p 8080:8080 -p 40000:40000 localhost/content-mirror:debug
 .PHONY: remote-debug
+
+remote-run:
+	$(CONTAINER_ENGINE) run $(CONTAINER_ENGINE_OPTS) $(CONTAINER_USER) --rm -v "$(CONTENT_MIRROR_DATA)/key:/tmp/key$(VOLUME_MOUNT_FLAGS)" -v "$(CONTENT_MIRROR_DATA)/mirror-enterprise-basic-auth:/tmp/mirror-enterprise-basic-auth$(VOLUME_MOUNT_FLAGS)" -v "$(CONTENT_MIRROR_DATA)/repos:/tmp/repos$(VOLUME_MOUNT_FLAGS)" -p 8080:8080 -p 40000:40000 localhost/content-mirror:debug
+.PHONY: remote-run

@@ -1,5 +1,5 @@
-FROM registry.ci.openshift.org/ci/origin-release:golang-1.21
-RUN go install github.com/go-delve/delve/cmd/dlv@latest
+FROM registry.ci.openshift.org/ci/origin-release:golang-1.23
+RUN GOFLAGS='' go install github.com/go-delve/delve/cmd/dlv@latest
 WORKDIR /go/src/github.com/openshift/content-mirror
 COPY . .
 RUN make debug
@@ -14,7 +14,8 @@ RUN INSTALL_PKGS=" \
     yum install -y ${INSTALL_PKGS} && rpm -V ${INSTALL_PKGS} && \
     yum clean all && \
     rm -rf /var/lib/rpm /var/lib/yum/history && \
-    chmod -R uga+rwx /var/cache/nginx /var/log/nginx /run
+    mkdir -p /var/cache/nginx && \
+    chmod -Rf uga+rwx /var/cache/nginx /var/log/nginx /run
 USER 1001
 EXPOSE 8080 40000
 CMD ["/usr/bin/dlv", "--listen=:40000", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "/usr/bin/content-mirror", "--", "-v", "--path=/tmp/config", "/tmp/repos"]
