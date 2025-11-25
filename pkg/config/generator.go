@@ -3,8 +3,8 @@ package config
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -36,7 +36,7 @@ func (m *Generator) Load(paths []string) error {
 	upstreamDefined := make(map[string]bool)
 
 	for _, p := range paths {
-		files, err := ioutil.ReadDir(p)
+		files, err := os.ReadDir(p)
 		if err != nil {
 			return err
 		}
@@ -57,7 +57,7 @@ func (m *Generator) Load(paths []string) error {
 				}
 				repoProxies = append(repoProxies, rpmRepoProxies...)
 				for _, upstream := range rpmUpstreams {
-					if _, ok := upstreamDefined[upstream.Name]; !ok {  // Dedupe upstreams
+					if _, ok := upstreamDefined[upstream.Name]; !ok { // Dedupe upstreams
 						upstreamDefined[upstream.Name] = true
 						upstreams = append(upstreams, upstream)
 					}
@@ -76,7 +76,7 @@ func (m *Generator) Load(paths []string) error {
 	if len(m.configPath) == 0 {
 		log.Printf("template:\n%s", buf.String())
 	} else {
-		if err := ioutil.WriteFile(m.configPath, buf.Bytes(), 0640); err != nil {
+		if err := os.WriteFile(m.configPath, buf.Bytes(), 0640); err != nil {
 			return err
 		}
 	}
