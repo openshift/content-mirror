@@ -57,7 +57,7 @@ http {
     proxy_set_header Connection "";
 
     {{ range $repoProxies -}}
-    location ~ ^/{{ .RepoID }}(/.*)$ {
+    location ~ ^/{{ .RepoID }}(.+)$ {
       proxy_pass {{ .URL }}$1;
 
       proxy_ssl_server_name on;
