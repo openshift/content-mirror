@@ -1,6 +1,6 @@
 module github.com/openshift/content-mirror
 
-go 1.23.6
+go 1.25
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0

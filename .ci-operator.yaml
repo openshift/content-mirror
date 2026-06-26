@@ -1,5 +1,5 @@
 build_root_image:
   use_build_cache: true
-  namespace: openshift
-  name: release
-  tag: golang-1.23
+  namespace: ocp
+  name: builder
+  tag: rhel-9-golang-1.25-openshift-4.22

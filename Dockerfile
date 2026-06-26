@@ -1,4 +1,4 @@
-FROM registry.ci.openshift.org/ci/origin-release:golang-1.23
+FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.25-openshift-4.22
 WORKDIR /go/src/github.com/openshift/content-mirror
 COPY . .
 RUN make build

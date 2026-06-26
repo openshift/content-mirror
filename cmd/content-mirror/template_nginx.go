@@ -15,6 +15,7 @@ http {
   sendfile     on;
   tcp_nopush   on;
   server_names_hash_bucket_size 128; # this seems to be required for some vhosts
+  resolver {{ .K8sDNS }} ipv6=off valid=30s;
 
   proxy_cache_path {{ .CacheDir }} levels=1:2 keys_zone=shared_cache:10m max_size={{ .MaxCacheSize }} inactive={{ .InactiveDuration }} use_temp_path=off;
 

@@ -68,6 +68,11 @@ type Options struct {
 // Run launches the configuration generator, the nginx process, and
 // an HTTP server for dynamic content.
 func (opt *Options) Run() error {
+	k8sDNS := os.Getenv("KUBERNETES_SERVICE_HOST")
+	if k8sDNS == "" {
+		log.Print("error: no KUBERNETES_SERVICE_HOST environment variable defined")
+		os.Exit(1)
+	}
 	t, err := template.New("config").Parse(nginxConfigTemplate)
 	if err != nil {
 		return err
@@ -79,6 +84,7 @@ func (opt *Options) Run() error {
 	}
 	cacheConfig := &config.CacheConfig{
 		LogLevel:         level,
+		K8sDNS:           k8sDNS,
 		LocalPort:        opt.LocalPort,
 		CacheDir:         opt.CacheDir,
 		MaxCacheSize:     opt.MaxCacheSize,
