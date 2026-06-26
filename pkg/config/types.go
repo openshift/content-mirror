@@ -5,6 +5,7 @@ type CacheConfig struct {
 	CacheDir         string
 	MaxCacheSize     string
 	InactiveDuration string
+	K8sDNS           string
 
 	LogLevel string
 
