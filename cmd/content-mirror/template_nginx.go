@@ -2,6 +2,7 @@ package main
 
 const nginxConfigTemplate = `
 {{ $config := . -}}
+pid /tmp/nginx.pid;
 worker_processes  5;  ## Default: 1
 worker_rlimit_nofile 8192;
 error_log stderr {{ .LogLevel }};

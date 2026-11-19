@@ -33,9 +33,9 @@ debug-image:
 .PHONY: debug-image
 
 remote-debug: debug-image
-	$(CONTAINER_ENGINE) run $(CONTAINER_ENGINE_OPTS) $(CONTAINER_USER) --rm -v "$(CONTENT_MIRROR_DATA)/key:/tmp/key$(VOLUME_MOUNT_FLAGS)" -v "$(CONTENT_MIRROR_DATA)/mirror-enterprise-basic-auth:/tmp/mirror-enterprise-basic-auth$(VOLUME_MOUNT_FLAGS)" -v "$(CONTENT_MIRROR_DATA)/repos:/tmp/repos$(VOLUME_MOUNT_FLAGS)" -p 8080:8080 -p 40000:40000 localhost/content-mirror:debug
+	$(CONTAINER_ENGINE) run $(CONTAINER_ENGINE_OPTS) $(CONTAINER_USER) --rm -v "$(CONTENT_MIRROR_DATA)/key:/tmp/key$(VOLUME_MOUNT_FLAGS)" -v "$(CONTENT_MIRROR_DATA)/mirror-enterprise-basic-auth:/tmp/mirror-enterprise-basic-auth$(VOLUME_MOUNT_FLAGS)" -v "$(CONTENT_MIRROR_DATA)/repos:/tmp/repos$(VOLUME_MOUNT_FLAGS)" -p 8080:8080 -p 40000:40000 -e KUBERNETES_SERVICE_HOST=127.0.0.1 -e KUBERNETES_SERVICE_PORT=8080 localhost/content-mirror:debug
 .PHONY: remote-debug
 
 remote-run:
-	$(CONTAINER_ENGINE) run $(CONTAINER_ENGINE_OPTS) $(CONTAINER_USER) --rm -v "$(CONTENT_MIRROR_DATA)/key:/tmp/key$(VOLUME_MOUNT_FLAGS)" -v "$(CONTENT_MIRROR_DATA)/mirror-enterprise-basic-auth:/tmp/mirror-enterprise-basic-auth$(VOLUME_MOUNT_FLAGS)" -v "$(CONTENT_MIRROR_DATA)/repos:/tmp/repos$(VOLUME_MOUNT_FLAGS)" -p 8080:8080 -p 40000:40000 localhost/content-mirror:debug
+	$(CONTAINER_ENGINE) run $(CONTAINER_ENGINE_OPTS) $(CONTAINER_USER) --rm -v "$(CONTENT_MIRROR_DATA)/key:/tmp/key$(VOLUME_MOUNT_FLAGS)" -v "$(CONTENT_MIRROR_DATA)/mirror-enterprise-basic-auth:/tmp/mirror-enterprise-basic-auth$(VOLUME_MOUNT_FLAGS)" -v "$(CONTENT_MIRROR_DATA)/repos:/tmp/repos$(VOLUME_MOUNT_FLAGS)" -p 8080:8080 -p 40000:40000 -e KUBERNETES_SERVICE_HOST=127.0.0.1 -e KUBERNETES_SERVICE_PORT=8080 localhost/content-mirror:debug
 .PHONY: remote-run
