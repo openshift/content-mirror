@@ -2,4 +2,4 @@ build_root_image:
   use_build_cache: true
   namespace: ocp
   name: builder
-  tag: rhel-9-golang-1.25-openshift-4.22
+  tag: rhel-9-golang-1.26-openshift-5.1

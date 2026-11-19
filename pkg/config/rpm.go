@@ -3,10 +3,10 @@ package config
 import (
 	b64 "encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/go-ini/ini"
@@ -35,14 +35,14 @@ func getUsernamePassword(section *ini.Section) (string, error) {
 			return "", fmt.Errorf("%s and %s must both be specified", usernameFileKey, passwordFileKey)
 		}
 		// Load username from file and remove nonstandard key
-		usernameIn, err := ioutil.ReadFile(section.Key(usernameFileKey).Value())
+		usernameIn, err := os.ReadFile(section.Key(usernameFileKey).Value())
 		if err != nil {
 			return "", fmt.Errorf("unable to read %s: %v", usernameFileKey, err)
 		}
 		section.DeleteKey(usernameFileKey)
 
 		// Load password from file and remove nonstandard key
-		passwordIn, err := ioutil.ReadFile(section.Key(passwordFileKey).Value())
+		passwordIn, err := os.ReadFile(section.Key(passwordFileKey).Value())
 		if err != nil {
 			return "", fmt.Errorf("unable to read %s: %v", passwordFileKey, err)
 		}
@@ -78,7 +78,7 @@ func LoadRPMRepoUpstreams(iniFile string) ([]Upstream, []RepoProxy, error) {
 			continue
 		}
 		var urls []*url.URL
-		for _, u := range strings.Split(repo.BaseURL, " ") {
+		for u := range strings.SplitSeq(repo.BaseURL, " ") {
 			u = strings.TrimSpace(u)
 			if len(u) == 0 {
 				continue
@@ -123,9 +123,9 @@ func LoadRPMRepoUpstreams(iniFile string) ([]Upstream, []RepoProxy, error) {
 		}
 
 		upstream := Upstream{
-			Repo:   true,
-			Name:   proxyPassURL.Host,
-			Hosts:  hosts,
+			Repo:  true,
+			Name:  proxyPassURL.Host,
+			Hosts: hosts,
 		}
 
 		repoProxy := RepoProxy{

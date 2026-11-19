@@ -6,6 +6,7 @@ import (
 	"log"
 	"mime"
 	"net/http"
+	"slices"
 	"strings"
 	"text/template"
 
@@ -118,15 +119,13 @@ func urlForRepo(req *http.Request, repo *config.RepoProxy) string {
 }
 
 func hasAccept(accept string, mediaTypes ...string) (string, bool) {
-	for _, s := range strings.Split(accept, ",") {
+	for s := range strings.SplitSeq(accept, ",") {
 		mediaType, _, err := mime.ParseMediaType(s)
 		if err != nil {
 			continue
 		}
-		for _, t := range mediaTypes {
-			if mediaType == t {
-				return mediaType, true
-			}
+		if slices.Contains(mediaTypes, mediaType) {
+			return mediaType, true
 		}
 	}
 	return "", false
